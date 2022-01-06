@@ -16,10 +16,26 @@ import (
 func Register(ctx *gin.Context) {
 
 	DB := common.GetDB()
+	//方法一，解析请求中Body字段中的数据，通过map
+	//var requestMap = make(map[string]string)
+	//json.NewDecoder(ctx.Request.Body).Decode(&requestMap)
 
-	name := ctx.PostForm("name")
-	telephone := ctx.PostForm("telephone")
-	password := ctx.PostForm("password")
+	//方法二，通过结构体
+	//var requestUser = model.User{}
+	//json.NewDecoder(ctx.Request.Body).Decode(&requestUser)
+
+	////方法三，通过gin的bind函数
+	var requestUser = model.User{}
+
+	err := ctx.Bind(&requestUser)
+	if err != nil {
+		return
+	}
+	///////////////////////
+
+	name := requestUser.Name
+	telephone := requestUser.Telephone
+	password := requestUser.Password
 
 	//数据验证
 	if len(telephone) != 11 {
