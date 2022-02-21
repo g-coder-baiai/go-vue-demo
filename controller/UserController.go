@@ -54,7 +54,7 @@ func Register(ctx *gin.Context) {
 
 	}
 
-	response.Success(ctx, nil, "注册成功")
+	//response.Success(ctx, nil, "注册成功")
 
 	log.Println(name, telephone, password)
 	//用户是否存在
@@ -78,15 +78,35 @@ func Register(ctx *gin.Context) {
 	}
 	DB.Create(&newUser)
 
+	//发放token
+	token, err := common.ReleaseToken(newUser)
+	if err != nil {
+		response.Response(ctx, http.StatusUnprocessableEntity, 500, nil, "系统异常")
+
+		log.Println("token generate error:", err)
+		return
+	}
+
+	//返回结果
+
+	response.Success(ctx, gin.H{"token": token}, "注册成功")
+
 }
 
 // Login 登录
 func Login(ctx *gin.Context) {
 	DB := common.GetDB()
 	//获取参数
-	telephone := ctx.PostForm("telephone")
-	password := ctx.PostForm("password")
-	//数据验证
+	var requestUser = model.User{}
+	err := ctx.Bind(&requestUser)
+	if err != nil {
+		return
+	}
+	///////////////////////
+
+	telephone := requestUser.Telephone
+	password := requestUser.Password
+
 	//数据验证
 	if len(telephone) != 11 {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "该手机号位数错误")
@@ -95,7 +115,7 @@ func Login(ctx *gin.Context) {
 	}
 	if len(password) < 6 {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "密码不应低于6位")
-
+		//ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": })
 		return
 	}
 	//判断手机号是否存在
